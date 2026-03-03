@@ -1,0 +1,31 @@
+# Copy to terraform.tfvars and fill in values
+
+aws_region         = "eu-north-1"
+environment        = "production"
+vpc_id             = "vpc-xxxxxxxxxxxxxxxxx"
+public_subnet_ids  = ["subnet-aaa", "subnet-bbb"]
+private_subnet_ids = ["subnet-ccc", "subnet-ddd"]
+
+# Supabase
+supabase_host = "db.ztejbfpbhxgwecvxngtf.supabase.co"
+
+# Redis (existing service)
+redis_host = "caretta-redis.xxxxxx.0001.eun1.cache.amazonaws.com"
+redis_port = 6379
+
+# Temporal Cloud
+temporal_host      = "caretta.xxxxx.tmprl.cloud"
+temporal_port      = 7233
+temporal_namespace = "caretta"
+
+# Image tags
+backend_image_tag = "latest"
+worker_image_tag  = "latest"
+
+# Sizing
+backend_cpu           = 512
+backend_memory        = 1024
+backend_desired_count = 1
+worker_cpu            = 512
+worker_memory         = 1024
+worker_desired_count  = 1
