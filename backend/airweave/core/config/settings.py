@@ -132,6 +132,10 @@ class Settings(BaseSettings):
     VESPA_TIMEOUT: float = 60.0
     VESPA_CLUSTER: str = "airweave"  # Vespa content cluster name for bulk operations
 
+    # Pgvector configuration
+    PGVECTOR_CONNECTION_STRING: Optional[str] = None
+    PGVECTOR_POOL_SIZE: int = 10
+
     # -------------------------------------------------------------------------
     # Storage backend configuration
     # -------------------------------------------------------------------------
