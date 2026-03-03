@@ -10,7 +10,7 @@ class ProcessingRequirement(Enum):
     sending them to the destination. The DestinationHandler maps these
     to the appropriate processor.
 
-    CHUNKS_AND_EMBEDDINGS: Full processing for vector databases (Qdrant, Vespa)
+    CHUNKS_AND_EMBEDDINGS: Full processing for vector databases (Qdrant, Pgvector)
     - Chunks text using semantic/AST chunking
     - Computes dense embeddings (3072-dim) for neural/semantic search
     - Computes sparse embeddings (FastEmbed Qdrant/bm25) for keyword search scoring

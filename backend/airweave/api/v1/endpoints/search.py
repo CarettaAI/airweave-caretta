@@ -241,7 +241,7 @@ async def search(
         pubsub=pubsub,
         dense_embedder=dense_embedder,
         sparse_embedder=sparse_embedder,
-        destination_override="vespa",
+        destination_override="pgvector",
     )
 
     ctx.logger.info(f"Search completed for collection '{readable_id}'")
@@ -301,7 +301,7 @@ async def stream_search_collection_advanced(  # noqa: C901 - streaming orchestra
     async def _run_search() -> None:
         try:
             async with AsyncSessionLocal() as search_db:
-                # Always use Vespa for public endpoints
+                # Always use Pgvector for public endpoints
                 await service.search(
                     request_id=request_id,
                     readable_collection_id=readable_id,
@@ -312,7 +312,7 @@ async def stream_search_collection_advanced(  # noqa: C901 - streaming orchestra
                     pubsub=pubsub,
                     dense_embedder=dense_embedder,
                     sparse_embedder=sparse_embedder,
-                    destination_override="vespa",
+                    destination_override="pgvector",
                 )
         except ValueError as e:
             await _publish_stream_error(message=str(e), transient=False)

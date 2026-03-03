@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from airweave import schemas
 from airweave.api.context import ApiContext
-from airweave.core.constants.reserved_ids import NATIVE_VESPA_UUID
+from airweave.core.constants.reserved_ids import NATIVE_PGVECTOR_UUID
 from airweave.core.shared_models import FeatureFlag, SyncJobStatus, SyncStatus
 from airweave.db.unit_of_work import UnitOfWork
 from airweave.domains.connections.protocols import ConnectionRepositoryProtocol
@@ -37,7 +37,7 @@ class SyncRecordService(SyncRecordServiceProtocol):
 
     async def resolve_destination_ids(self, db: AsyncSession, ctx: ApiContext) -> List[UUID]:
         """Resolve destination connection IDs based on feature flags."""
-        destination_ids: List[UUID] = [NATIVE_VESPA_UUID]
+        destination_ids: List[UUID] = [NATIVE_PGVECTOR_UUID]
 
         if ctx.has_feature(FeatureFlag.S3_DESTINATION):
             s3_connection = await self._connection_repo.get_s3_destination_for_org(db, ctx)

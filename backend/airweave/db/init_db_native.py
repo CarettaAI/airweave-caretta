@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from airweave.core.constants.reserved_ids import (
     NATIVE_NEO4J_UUID,
-    NATIVE_VESPA_UUID,
+    NATIVE_PGVECTOR_UUID,
 )
 from airweave.core.shared_models import ConnectionStatus, IntegrationType
 from airweave.models.connection import Connection
@@ -16,10 +16,7 @@ async def init_db_with_native_connections(db: AsyncSession) -> None:
 
     Creates the built-in connections for:
     - neo4j_native (graph database destination)
-    - vespa_native (vector database destination with internal chunking/embedding)
-
-    Note: Qdrant has been deprecated. Vespa is the sole vector database destination.
-    Embedding models are handled internally by DenseEmbedder and SparseEmbedder.
+    - pgvector_native (vector database destination)
 
     These connections are system-level and don't belong to any organization.
     """
@@ -33,12 +30,12 @@ async def init_db_with_native_connections(db: AsyncSession) -> None:
             "short_name": "neo4j_native",
             "status": ConnectionStatus.ACTIVE,
         },
-        "vespa_native": {
-            "id": NATIVE_VESPA_UUID,
-            "name": "Native Vespa",
-            "readable_id": "native-vespa",
+        "pgvector_native": {
+            "id": NATIVE_PGVECTOR_UUID,
+            "name": "Native Pgvector",
+            "readable_id": "native-pgvector",
             "integration_type": IntegrationType.DESTINATION,
-            "short_name": "vespa_native",
+            "short_name": "pgvector_native",
             "status": ConnectionStatus.ACTIVE,
         },
     }

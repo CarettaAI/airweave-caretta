@@ -2,7 +2,7 @@
 
 Performs the actual search against the configured destination using the
 destination-agnostic search interface. This is the core search operation that
-queries the vector database (Qdrant, Vespa, or future destinations).
+queries the vector database (Qdrant, Pgvector, or future destinations).
 """
 
 from typing import TYPE_CHECKING, Any, Dict, List
@@ -47,7 +47,7 @@ class Retrieval(SearchOperation):
     def depends_on(self) -> List[str]:
         """Depends on operations that may provide embeddings and filters.
 
-        Note: EmbedQuery may not run for destinations that embed server-side (e.g., Vespa).
+        Note: EmbedQuery may not run for destinations that embed server-side (e.g., Pgvector).
         In that case, embeddings will be None in state and the destination handles it.
         """
         return [
@@ -230,7 +230,7 @@ class Retrieval(SearchOperation):
         """Serialize AirweaveSearchResult objects to dicts for API compatibility.
 
         The AirweaveSearchResult provides a unified schema guaranteeing both
-        Qdrant and Vespa return identical structures. This method serializes
+        Qdrant and Pgvector return identical structures. This method serializes
         them to dicts for API responses.
 
         Args:

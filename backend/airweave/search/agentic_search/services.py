@@ -341,6 +341,13 @@ class AgenticSearchServices:
         Raises:
             ValueError: If vector DB provider is unknown.
         """
+        if config.VECTOR_DB_PROVIDER == VectorDBProvider.PGVECTOR:
+            from airweave.search.agentic_search.external.vector_database.pgvector import (
+                PgvectorVectorDB,
+            )
+
+            return await PgvectorVectorDB.create(ctx)
+
         if config.VECTOR_DB_PROVIDER == VectorDBProvider.VESPA:
             from airweave.search.agentic_search.external.vector_database.vespa import (
                 VespaVectorDB,

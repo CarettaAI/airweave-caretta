@@ -464,7 +464,7 @@ class FederatedSearch(SearchOperation):
         """Convert entity to result dictionary matching AirweaveSearchResult format.
 
         Converts BaseEntity from federated source to the unified AirweaveSearchResult
-        format that matches what Qdrant and Vespa destinations return. This ensures
+        format that matches what Qdrant and Pgvector destinations return. This ensures
         consistent result structure across all search sources.
 
         Args:
@@ -526,7 +526,7 @@ class FederatedSearch(SearchOperation):
         source_fields = {k: v for k, v in payload.items() if k not in known_fields}
 
         # Build result in AirweaveSearchResult format (as dict, not Pydantic object)
-        # This matches the structure returned by Qdrant and Vespa destinations
+        # This matches the structure returned by Qdrant and Pgvector destinations
         result = {
             "id": entity_id,
             "score": score,

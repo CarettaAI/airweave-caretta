@@ -54,6 +54,7 @@ class TokenizerEncoding(str, Enum):
 class VectorDBProvider(str, Enum):
     """Supported vector database providers."""
 
+    PGVECTOR = "pgvector"
     VESPA = "vespa"
 
 
@@ -86,7 +87,7 @@ class AgenticSearchConfig:
     TOKENIZER_ENCODING = TokenizerEncoding.O200K_HARMONY
 
     # Vector database
-    VECTOR_DB_PROVIDER = VectorDBProvider.VESPA
+    VECTOR_DB_PROVIDER = VectorDBProvider.PGVECTOR
 
 
 config = AgenticSearchConfig()

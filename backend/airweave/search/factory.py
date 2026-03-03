@@ -49,7 +49,7 @@ from airweave.search.providers.schemas import (
 )
 
 # Type alias for destination override
-DestinationOverride = Literal["qdrant", "vespa"]
+DestinationOverride = Literal["qdrant", "pgvector"]
 
 # Rebuild SearchContext model now that all operation classes are imported
 SearchContext.model_rebuild()
@@ -94,8 +94,8 @@ class SearchFactory:
             pubsub: PubSub adapter for event streaming
             dense_embedder: Domain dense embedder for generating neural embeddings
             sparse_embedder: Domain sparse embedder for generating BM25 embeddings
-            destination_override: Override destination ("qdrant" or "vespa").
-                If None, uses collection's default destination (Qdrant).
+            destination_override: Override destination ("qdrant" or "pgvector").
+                If None, uses collection's default destination.
             user_principal_override: Username to use for ACL filtering.
                 If None, uses ctx.user for ACL (normal behavior).
             skip_organization_check: If True, skip organization filtering when
@@ -220,7 +220,7 @@ class SearchFactory:
         )
 
         # Disable query expansion for keyword-only search
-        # Reason: Vespa uses a single sparse embedding for keyword scoring, not per-expanded-query.
+        # Reason: Pgvector uses a single sparse embedding for keyword scoring, not per-expanded-query.
         # Qdrant does support expanded sparse queries, but for consistency across destinations,
         # we disable expansion for keyword-only searches entirely.
         if retrieval_strategy == RetrievalStrategy.KEYWORD and expand_query:
@@ -318,7 +318,7 @@ class SearchFactory:
             federated_sources: List of instantiated federated source objects
             has_vector_sources: Whether collection has any vector-backed sources
             search_request: Original search request from user
-            destination: The destination instance for search (Qdrant, Vespa, etc.)
+            destination: The destination instance for search (Qdrant, Pgvector, etc.)
             requires_client_embedding: Whether destination needs client-side embeddings
             dense_embedder: Domain dense embedder for generating neural embeddings
             sparse_embedder: Domain sparse embedder for generating BM25 embeddings
@@ -585,19 +585,19 @@ class SearchFactory:
             db: Database session
             collection: Collection object
             ctx: API context
-            destination_override: Override destination ("qdrant" or "vespa")
+            destination_override: Override destination ("qdrant" or "pgvector")
 
         Returns:
-            Destination instance (Qdrant or Vespa)
+            Destination instance (Qdrant or Pgvector)
         """
-        if destination_override == "vespa":
-            from airweave.platform.destinations.vespa import VespaDestination
+        if destination_override == "pgvector":
+            from airweave.platform.destinations.pgvector import PgvectorDestination
 
             ctx.logger.info(
-                f"[SearchFactory] Using Vespa destination (override) for "
+                f"[SearchFactory] Using Pgvector destination (override) for "
                 f"collection {collection.readable_id}"
             )
-            return await VespaDestination.create(
+            return await PgvectorDestination.create(
                 collection_id=collection.id,
                 organization_id=collection.organization_id,
                 logger=ctx.logger,
@@ -611,12 +611,12 @@ class SearchFactory:
     ) -> BaseDestination:
         """Get the default destination instance for a collection.
 
-        Uses Vespa as the sole vector database destination.
+        Uses Pgvector as the sole vector database destination.
         """
-        from airweave.platform.destinations.vespa import VespaDestination
+        from airweave.platform.destinations.pgvector import PgvectorDestination
 
-        ctx.logger.info(f"[SearchFactory] Collection {collection.readable_id} uses Vespa")
-        return await VespaDestination.create(
+        ctx.logger.info(f"[SearchFactory] Collection {collection.readable_id} uses Pgvector")
+        return await PgvectorDestination.create(
             collection_id=collection.id,
             organization_id=collection.organization_id,
             logger=ctx.logger,

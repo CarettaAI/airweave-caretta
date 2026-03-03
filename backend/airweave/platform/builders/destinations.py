@@ -1,7 +1,7 @@
 """Destinations context builder for sync operations.
 
 Handles destination creation with:
-- Native destinations (Vespa) using settings
+- Native destinations (Pgvector) using settings
 - Custom destinations with credentials
 - Entity definition map loading
 """
@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from airweave import crud, schemas
 from airweave.core import credentials
-from airweave.core.constants.reserved_ids import NATIVE_VESPA_UUID
+from airweave.core.constants.reserved_ids import NATIVE_PGVECTOR_UUID
 from airweave.core.context import BaseContext
 from airweave.core.logging import ContextualLogger
 from airweave.platform.destinations._base import BaseDestination
@@ -119,7 +119,7 @@ class DestinationsContextBuilder:
         """
         # Map native UUIDs to their creator methods
         native_creators = {
-            NATIVE_VESPA_UUID: cls._create_native_vespa,
+            NATIVE_PGVECTOR_UUID: cls._create_native_pgvector,
         }
 
         destinations = []
@@ -197,9 +197,9 @@ class DestinationsContextBuilder:
         logger: ContextualLogger,
     ) -> Optional[BaseDestination]:
         """Create a single destination instance."""
-        # Special case: Native Vespa
-        if destination_connection_id == NATIVE_VESPA_UUID:
-            return await cls._create_native_vespa(db, collection, logger)
+        # Special case: Native Pgvector
+        if destination_connection_id == NATIVE_PGVECTOR_UUID:
+            return await cls._create_native_pgvector(db, collection, logger)
 
         # Regular case: Load from database
         return await cls._create_custom_destination(
@@ -212,17 +212,17 @@ class DestinationsContextBuilder:
         )
 
     @classmethod
-    async def _create_native_vespa(
+    async def _create_native_pgvector(
         cls,
         db: AsyncSession,
         collection: schemas.CollectionRecord,
         logger: ContextualLogger,
     ) -> Optional[BaseDestination]:
-        """Create native Vespa destination."""
-        logger.info("Using native Vespa destination (settings-based)")
-        destination_model = await crud.destination.get_by_short_name(db, "vespa")
+        """Create native Pgvector destination."""
+        logger.info("Using native Pgvector destination (settings-based)")
+        destination_model = await crud.destination.get_by_short_name(db, "pgvector")
         if not destination_model:
-            logger.warning("Vespa destination model not found")
+            logger.warning("Pgvector destination model not found")
             return None
 
         destination_schema = schemas.Destination.model_validate(destination_model)
@@ -233,11 +233,11 @@ class DestinationsContextBuilder:
             config=None,
             collection_id=collection.id,
             organization_id=collection.organization_id,
-            vector_size=None,  # Vespa handles embeddings internally
+            vector_size=None,
             logger=logger,
         )
 
-        logger.info("Created native Vespa destination")
+        logger.info("Created native Pgvector destination")
         return destination
 
     @classmethod
@@ -330,7 +330,7 @@ class DestinationsContextBuilder:
 
         Priority order:
         1. target_destinations (explicit whitelist) - highest priority
-        2. exclude_destinations + skip_vespa (combined exclusions)
+        2. exclude_destinations + skip_pgvector (combined exclusions)
         """
         if not execution_config:
             return destination_ids
@@ -349,9 +349,9 @@ class DestinationsContextBuilder:
             exclusions.update(execution_config.destinations.exclude_destinations)
 
         # Add native vector DB exclusions from boolean flags
-        if execution_config.destinations.skip_vespa:
-            exclusions.add(NATIVE_VESPA_UUID)
-            logger.info("Excluding native Vespa (skip_vespa=True)")
+        if execution_config.destinations.skip_pgvector:
+            exclusions.add(NATIVE_PGVECTOR_UUID)
+            logger.info("Excluding native Pgvector (skip_pgvector=True)")
 
         # Apply exclusions
         if exclusions:

@@ -104,7 +104,7 @@ class EntityActionDispatcher:
         encountered during this sync run.
 
         Each handler independently cleans up its own storage:
-        - DestinationHandler → vector stores (Qdrant, Vespa)
+        - DestinationHandler → vector stores (Qdrant, Pgvector)
         - ArfHandler → ARF storage
         - EntityPostgresHandler → postgres DB
 

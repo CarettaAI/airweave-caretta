@@ -1,7 +1,7 @@
 """Internal search result schema for unified destination responses.
 
 This module defines the AirweaveSearchResult schema that ensures both Qdrant
-and Vespa destinations return identical payload structures. The schema is used
+and Pgvector destinations return identical payload structures. The schema is used
 internally by destinations and serialized to dict for API responses.
 """
 
@@ -41,12 +41,12 @@ class AirweaveSearchResult(BaseModel):
     """Internal search result schema guaranteeing identical payloads.
 
     Used internally by destinations; serialized to dict for API response.
-    This ensures Qdrant and Vespa return identical structures.
+    This ensures Qdrant and Pgvector return identical structures.
 
     The schema normalizes differences between destinations:
-    - Vespa's flattened system metadata -> nested system_metadata
-    - Vespa's epoch timestamps -> datetime objects
-    - Vespa's payload JSON string -> source_fields dict
+    - Pgvector's column-based system metadata -> nested system_metadata
+    - Pgvector's timestamp columns -> datetime objects
+    - Pgvector's payload JSONB -> source_fields dict
     - Qdrant's nested access dict -> access object
     """
 

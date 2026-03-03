@@ -26,7 +26,7 @@ class AirweaveTemporalConfig(BaseModel):
 
     This configuration is translated to destination-specific formats:
     - Qdrant: DecayConfig with linear decay
-    - Vespa: Freshness ranking function (future implementation)
+    - Pgvector: Freshness ranking function (future implementation)
 
     The TemporalRelevance operation dynamically computes these values by analyzing
     the actual timestamp distribution in the collection.

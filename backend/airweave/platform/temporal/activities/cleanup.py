@@ -81,20 +81,20 @@ class SelfDestructOrphanedSyncActivity:
 
 @dataclass
 class CleanupSyncDataActivity:
-    """Clean up external data (Vespa, ARF, schedules) for deleted syncs.
+    """Clean up external data (Pgvector, ARF, schedules) for deleted syncs.
 
     Dependencies: None (uses internal services)
 
     This activity runs asynchronously after a source connection or collection
     has been deleted from the database. It handles the slow, potentially
-    long-running cleanup of destination data (Vespa can take minutes),
+    long-running cleanup of destination data (Pgvector can take minutes),
     Temporal schedules, and ARF storage.
 
     Accepts only primitive IDs -- no full schemas or dicts -- so the Temporal
     payload stays small and the activity is self-contained.
 
     Since the DB records are already gone by the time this runs, failure is
-    non-critical -- the data in Vespa is just orphaned (unsearchable since
+    non-critical -- the data in Pgvector is just orphaned (unsearchable since
     the collection metadata no longer exists).
     """
 
@@ -109,8 +109,8 @@ class CleanupSyncDataActivity:
 
         Args:
             sync_ids: List of sync ID strings to clean up.
-            collection_id: Collection UUID string (for Vespa scoped deletion).
-            organization_id: Organization UUID string (for Vespa client init).
+            collection_id: Collection UUID string (for Pgvector scoped deletion).
+            organization_id: Organization UUID string (for Pgvector client init).
 
         Returns:
             Summary of cleanup actions and any errors.
@@ -118,7 +118,7 @@ class CleanupSyncDataActivity:
         from uuid import UUID
 
         from airweave.core.logging import LoggerConfigurator
-        from airweave.platform.destinations.vespa.destination import VespaDestination
+        from airweave.platform.destinations.pgvector.destination import PgvectorDestination
         from airweave.platform.sync.arf import arf_service
         from airweave.platform.temporal.schedule_service import temporal_schedule_service
 
@@ -141,16 +141,16 @@ class CleanupSyncDataActivity:
             "errors": [],
         }
 
-        # Build Vespa destination once (only needs collection_id + organization_id)
-        vespa: VespaDestination | None = None
+        # Build Pgvector destination once (only needs collection_id + organization_id)
+        pgvector: PgvectorDestination | None = None
         try:
-            vespa = await VespaDestination.create(
+            pgvector = await PgvectorDestination.create(
                 collection_id=col_uuid,
                 organization_id=org_uuid,
                 logger=logger,
             )
         except Exception as e:
-            error_msg = f"Failed to create Vespa destination for cleanup: {e}"
+            error_msg = f"Failed to create Pgvector destination for cleanup: {e}"
             logger.error(error_msg)
             summary["errors"].append(error_msg)
 
@@ -167,14 +167,14 @@ class CleanupSyncDataActivity:
                 except Exception as e:
                     logger.debug(f"Schedule {schedule_id} not deleted: {e}")
 
-            # 2. Vespa data (potentially slow)
-            if vespa:
+            # 2. Pgvector data (potentially slow)
+            if pgvector:
                 try:
-                    await vespa.delete_by_sync_id(sync_id)
+                    await pgvector.delete_by_sync_id(sync_id)
                     summary["destinations_cleaned"] += 1
-                    logger.info(f"Deleted Vespa data for sync {sync_id}")
+                    logger.info(f"Deleted Pgvector data for sync {sync_id}")
                 except Exception as e:
-                    error_msg = f"Failed to delete Vespa data for sync {sync_id}: {e}"
+                    error_msg = f"Failed to delete Pgvector data for sync {sync_id}: {e}"
                     logger.error(error_msg)
                     summary["errors"].append(error_msg)
 

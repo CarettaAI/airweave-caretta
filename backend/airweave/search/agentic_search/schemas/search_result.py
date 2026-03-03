@@ -239,7 +239,7 @@ class ResultsSectionInfo:
 class AgenticSearchResults(BaseModel):
     """Container for search results with budget-aware rendering.
 
-    Results are stored in relevance order (highest first, as returned by Vespa).
+    Results are stored in relevance order (highest first, as returned by the vector DB).
     """
 
     results: list[AgenticSearchResult] = Field(
@@ -305,7 +305,7 @@ class AgenticSearchResults(BaseModel):
     def iter_by_relevance(self) -> Iterator[AgenticSearchResult]:
         """Iterate over results from highest to lowest relevance.
 
-        Results are already stored in relevance order from Vespa.
+        Results are already stored in relevance order from the vector DB.
 
         Yields:
             AgenticSearchResult objects in descending relevance order.

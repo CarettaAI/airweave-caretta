@@ -2,7 +2,7 @@
 
 Provides unified cleanup for:
 - Temporal schedules
-- Destination data (Qdrant, Vespa) - via builder-constructed destinations
+- Destination data (Qdrant, Pgvector) - via builder-constructed destinations
 - ARF storage
 """
 
@@ -36,7 +36,7 @@ class CleanupService:
 
         Always removes:
         - Temporal schedules (sync, minute-sync, daily-cleanup)
-        - Destination data (Qdrant, Vespa, etc.) by sync_id
+        - Destination data (Qdrant, Pgvector, etc.) by sync_id
         - ARF storage by sync_id
 
         Args:

@@ -92,7 +92,7 @@ class SyncLifecycleService(SyncLifecycleServiceProtocol):
 
         1. Cancels PENDING/RUNNING workflows via Temporal.
         2. Polls until terminal state (up to cancel_timeout_seconds).
-        3. Schedules async cleanup workflow for Vespa/ARF/schedules.
+        3. Schedules async cleanup workflow for Pgvector/ARF/schedules.
         """
         syncs_to_wait = await self._cancel_active_syncs(db, sync_ids, ctx)
         await self._wait_for_terminal(db, syncs_to_wait, cancel_timeout_seconds, ctx)
@@ -374,7 +374,7 @@ class SyncLifecycleService(SyncLifecycleServiceProtocol):
         organization_id: UUID,
         ctx: ApiContext,
     ) -> None:
-        """Schedule a Temporal workflow for async Vespa/ARF cleanup."""
+        """Schedule a Temporal workflow for async Pgvector/ARF cleanup."""
         if not sync_ids:
             return
         try:
@@ -387,7 +387,7 @@ class SyncLifecycleService(SyncLifecycleServiceProtocol):
         except Exception as e:
             ctx.logger.error(
                 f"Failed to schedule async cleanup for collection {collection_id}: {e}. "
-                f"Data may be orphaned in Vespa/ARF."
+                f"Data may be orphaned in Pgvector/ARF."
             )
 
     async def _validate_force_full_sync(

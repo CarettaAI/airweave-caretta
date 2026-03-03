@@ -293,7 +293,7 @@ async def update(
 2. The source connection, sync configuration, job history, and entity
    metadata are cascade-deleted from the database.
 3. A background cleanup workflow is scheduled to remove data from the
-   vector database (Vespa) and raw data storage (ARF). This may take
+   vector database (Pgvector) and raw data storage (ARF). This may take
    several minutes for large datasets but does **not** block the response.
 
 The API returns immediately after step 2. Vector database cleanup happens

@@ -15,7 +15,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class DestinationConfig(BaseModel):
     """Controls where entities are written."""
 
-    skip_vespa: bool = Field(False, description="Skip writing to native Vespa")
+    skip_pgvector: bool = Field(False, description="Skip writing to native Pgvector")
     target_destinations: Optional[List[UUID]] = Field(
         None, description="If set, ONLY write to these destination UUIDs"
     )
@@ -70,11 +70,11 @@ class SyncConfig(BaseSettings):
     @model_validator(mode="after")
     def validate_config_logic(self):
         """Validate that config combinations make sense."""
-        # Vespa must be enabled (sole vector database)
-        if self.destinations.skip_vespa:
+        # Pgvector must be enabled (sole vector database)
+        if self.destinations.skip_pgvector:
             raise ValueError(
-                "Invalid config: skip_vespa is True. "
-                "Vespa is the only vector database and must be enabled."
+                "Invalid config: skip_pgvector is True. "
+                "Pgvector is the only vector database and must be enabled."
             )
 
         if self.destinations.target_destinations and self.destinations.exclude_destinations:
@@ -119,9 +119,9 @@ class SyncConfig(BaseSettings):
         return cls()
 
     @classmethod
-    def vespa_only(cls) -> "SyncConfig":
-        """Write to Vespa only (default since Qdrant deprecation)."""
-        return cls(destinations=DestinationConfig(skip_vespa=False))
+    def pgvector_only(cls) -> "SyncConfig":
+        """Write to Pgvector only (default since Qdrant deprecation)."""
+        return cls(destinations=DestinationConfig(skip_pgvector=False))
 
     @classmethod
     def arf_capture_only(cls) -> "SyncConfig":

@@ -49,9 +49,9 @@ class FakeSyncRecordService:
         if self._should_raise:
             raise self._should_raise
         if self._resolve_dest_ids is None:
-            from airweave.core.constants.reserved_ids import NATIVE_VESPA_UUID
+            from airweave.core.constants.reserved_ids import NATIVE_PGVECTOR_UUID
 
-            return [NATIVE_VESPA_UUID]
+            return [NATIVE_PGVECTOR_UUID]
         return self._resolve_dest_ids
 
     async def create_sync(

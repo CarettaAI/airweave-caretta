@@ -435,7 +435,7 @@ class PgvectorDestination(VectorDBDestination):
     def _extract_payload(self, entity: BaseEntity) -> str:
         """Extract source-specific fields into payload JSON.
 
-        Mirrors Vespa's EntityTransformer._add_payload_field logic:
+        Extracts source-specific fields into a payload JSON blob:
         dumps the entity, then removes known schema fields.
         """
         # Known fields that have their own columns

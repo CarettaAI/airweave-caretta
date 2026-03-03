@@ -1,5 +1,0 @@
-<query-profile id="default">
-    <!-- Max hits/offset for large result sets (reranking, prefetch) -->
-    <field name="maxHits">10000</field>
-    <field name="maxOffset">10000</field>
-</query-profile>

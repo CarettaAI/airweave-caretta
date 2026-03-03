@@ -1,7 +1,7 @@
 """Cleanup module for persistent data deletion.
 
 Provides unified cleanup for:
-- Destination data (Qdrant, Vespa) via handler pattern
+- Destination data (Qdrant, Pgvector) via handler pattern
 - ARF storage
 - Temporal schedules
 

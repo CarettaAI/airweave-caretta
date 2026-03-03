@@ -22,7 +22,7 @@ class CRUDConnection(CRUDBaseOrganization[Connection, ConnectionCreate, Connecti
     NATIVE_CONNECTION_SHORT_NAMES = [
         "qdrant_native",
         "neo4j_native",
-        "vespa_native",
+        "pgvector_native",
         "local_text2vec",
     ]
 

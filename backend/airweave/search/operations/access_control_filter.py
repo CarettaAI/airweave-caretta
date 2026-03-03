@@ -36,7 +36,7 @@ class AccessControlFilter(SearchOperation):
 
     Mixed Collection Support:
     - Non-AC source entities have access_is_public = true by default
-    - This is set during indexing (see VespaDestination._add_access_control_fields)
+    - This is set during indexing (see PgvectorDestination._add_access_control_fields)
     - No need to check for field absence - all entities have access fields
     """
 
@@ -104,7 +104,7 @@ class AccessControlFilter(SearchOperation):
         )
         ctx.logger.debug(f"[AccessControlFilter] Principals: {principals}")
 
-        # Build filter - destination will translate to appropriate format (YQL for Vespa, etc.)
+        # Build filter - destination will translate to appropriate format (SQL for Pgvector, etc.)
         access_filter = self._build_access_control_filter(principals)
 
         # Merge with any existing filter in state (e.g., from QueryInterpretation)
@@ -135,12 +135,12 @@ class AccessControlFilter(SearchOperation):
         1. Entity is public (access.is_public = true), OR
         2. access.viewers contains ANY of the user's principals
 
-        Note: This filter format is destination-agnostic. VespaDestination and
+        Note: This filter format is destination-agnostic. PgvectorDestination and
         QdrantDestination both translate this to their native format.
 
         Mixed Collections Support:
         - Non-AC source entities have access_is_public = true by default
-        - This is set during indexing (see VespaDestination._add_access_control_fields)
+        - This is set during indexing (see PgvectorDestination._add_access_control_fields)
         - No need to check for field absence - all entities have access fields
 
         Args:

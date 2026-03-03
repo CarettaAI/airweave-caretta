@@ -23,7 +23,7 @@ from airweave.search.helpers import search_helpers
 from airweave.search.orchestrator import orchestrator
 
 # Type alias for destination
-SearchDestination = Literal["qdrant", "vespa"]
+SearchDestination = Literal["qdrant", "pgvector"]
 
 
 class SearchService:
@@ -56,7 +56,7 @@ class SearchService:
             dense_embedder: Domain dense embedder for generating neural embeddings
             sparse_embedder: Domain sparse embedder for generating BM25 embeddings
             destination_override: If provided, override the default destination
-                ('qdrant' or 'vespa'). If None, uses SyncConfig default.
+                ('qdrant' or 'pgvector'). If None, uses SyncConfig default.
 
         Returns:
             SearchResponse with results
@@ -153,7 +153,7 @@ class SearchService:
         """Admin search with destination selection (no ACL filtering by logged-in user).
 
         Allows searching any collection regardless of organization with selectable
-        destination (Qdrant or Vespa). This is primarily for migration testing
+        destination (Qdrant or Pgvector). This is primarily for migration testing
         and admin support operations.
 
         Args:
@@ -165,7 +165,7 @@ class SearchService:
             pubsub: PubSub adapter for event streaming
             dense_embedder: Domain dense embedder for generating neural embeddings
             sparse_embedder: Domain sparse embedder for generating BM25 embeddings
-            destination: Search destination ('qdrant' or 'vespa')
+            destination: Search destination ('qdrant' or 'pgvector')
 
         Returns:
             SearchResponse with results
@@ -227,7 +227,7 @@ class SearchService:
         *,
         dense_embedder: DenseEmbedderProtocol,
         sparse_embedder: SparseEmbedderProtocol,
-        destination: SearchDestination = "vespa",
+        destination: SearchDestination = "pgvector",
     ) -> SearchResponse:
         """Search as a specific user with ACL filtering.
 
@@ -246,7 +246,7 @@ class SearchService:
             user_principal: Username to search as (e.g., "john" or "john@example.com")
             dense_embedder: Domain dense embedder for generating neural embeddings
             sparse_embedder: Domain sparse embedder for generating BM25 embeddings
-            destination: Search destination ('qdrant' or 'vespa')
+            destination: Search destination ('qdrant' or 'pgvector')
 
         Returns:
             SearchResponse with results filtered by user's access permissions

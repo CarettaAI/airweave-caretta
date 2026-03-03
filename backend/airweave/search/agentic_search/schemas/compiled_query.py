@@ -22,12 +22,12 @@ class AgenticSearchCompiledQuery(BaseModel):
     history, logs, or prompts while still being accessible for query execution.
 
     Attributes:
-        vector_db: Name of the vector database (e.g., "vespa", "qdrant").
+        vector_db: Name of the vector database (e.g., "pgvector", "qdrant").
         display: Human-readable query string for logging (no embeddings).
         _raw: Private attribute containing the full query for execution.
     """
 
-    vector_db: str = Field(..., description="Vector database name (e.g., 'vespa', 'qdrant')")
+    vector_db: str = Field(..., description="Vector database name (e.g., 'pgvector', 'qdrant')")
     display: str = Field(..., description="Human-readable query for logging (no embeddings)")
 
     _raw: Any = PrivateAttr()

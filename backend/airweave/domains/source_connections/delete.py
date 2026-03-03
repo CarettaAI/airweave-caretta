@@ -26,7 +26,7 @@ class SourceConnectionDeletionService(SourceConnectionDeletionServiceProtocol):
     1. Cancel any running sync workflows and wait for them to stop.
     2. CASCADE-delete the DB records (source connection, sync, jobs, entities).
     3. Fire-and-forget a Temporal cleanup workflow for the slow external
-       data deletion (Vespa, ARF, schedules) which can take minutes.
+       data deletion (Pgvector, ARF, schedules) which can take minutes.
     """
 
     def __init__(
@@ -109,8 +109,8 @@ class SourceConnectionDeletionService(SourceConnectionDeletionServiceProtocol):
         # Delete the source connection first (CASCADE removes sync, jobs, entities).
         await self._sc_repo.remove(db, id=id, ctx=ctx)
 
-        # Fire-and-forget: schedule async cleanup of external data (Vespa, ARF,
-        # Temporal schedules). This can take minutes for Vespa and must not
+        # Fire-and-forget: schedule async cleanup of external data (Pgvector, ARF,
+        # Temporal schedules). This can take minutes for Pgvector and must not
         # block the API response.
         if sync_id:
             try:
@@ -123,7 +123,7 @@ class SourceConnectionDeletionService(SourceConnectionDeletionServiceProtocol):
             except Exception as e:
                 ctx.logger.error(
                     f"Failed to schedule async cleanup for sync {sync_id}: {e}. "
-                    f"Data may be orphaned in Vespa/ARF."
+                    f"Data may be orphaned in Pgvector/ARF."
                 )
 
         return response

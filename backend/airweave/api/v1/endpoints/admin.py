@@ -1017,8 +1017,8 @@ async def resync_with_execution_config(
                 },
             },
             {
-                "summary": "Skip Vespa",
-                "value": {"destinations": {"skip_vespa": True}},
+                "summary": "Skip Pgvector",
+                "value": {"destinations": {"skip_pgvector": True}},
             },
         ],
     ),
@@ -1026,7 +1026,7 @@ async def resync_with_execution_config(
         None,
         description="Optional tags for filtering and organizing sync jobs",
         examples=[
-            ["vespa-backfill-01-22-2026", "manual"],
+            ["pgvector-backfill-01-22-2026", "manual"],
             ["production"],
         ],
     ),
@@ -1042,13 +1042,13 @@ async def resync_with_execution_config(
     can use API keys to access this endpoint programmatically.
 
     **Config Structure**: Nested config with 4 sub-objects:
-        - destinations: skip_vespa, target_destinations, exclude_destinations
+        - destinations: skip_pgvector, target_destinations, exclude_destinations
         - handlers: enable_vector_handlers, enable_raw_data_handler, enable_postgres_handler
         - cursor: skip_load, skip_updates
         - behavior: skip_hash_comparison, replay_from_arf
 
     **Tags**: Optional list of strings for filtering/organizing jobs:
-        - Example: ["vespa-backfill-01-22-2026", "manual"]
+        - Example: ["pgvector-backfill-01-22-2026", "manual"]
         - Stored in sync_metadata.tags for filtering in admin dashboard
 
     Args:
@@ -1068,7 +1068,7 @@ async def resync_with_execution_config(
         - Normal sync: SyncConfig.default()
         - ARF capture only: SyncConfig.arf_capture_only()
         - ARF replay to vector DBs: SyncConfig.replay_from_arf_to_vector_dbs()
-        - Vespa only: SyncConfig.vespa_only()
+        - Pgvector only: SyncConfig.pgvector_only()
     """
     _require_admin_permission(ctx, FeatureFlagEnum.API_KEY_ADMIN_SYNC)
 
@@ -1241,7 +1241,7 @@ class AdminSyncInfo(schemas.Sync):
     total_entity_count: int = 0
     total_arf_entity_count: Optional[int] = None
     total_qdrant_entity_count: Optional[int] = None
-    total_vespa_entity_count: Optional[int] = None
+    total_pgvector_entity_count: Optional[int] = None
 
     last_job_status: Optional[str] = None
     last_job_at: Optional[datetime] = None
@@ -1256,7 +1256,7 @@ class AdminSearchDestination(str, Enum):
     """Destination options for admin search."""
 
     QDRANT = "qdrant"
-    VESPA = "vespa"
+    PGVECTOR = "pgvector"
 
 
 @router.post("/collections/{readable_id}/search", response_model=schemas.SearchResponse)
@@ -1267,7 +1267,7 @@ async def admin_search_collection(
     ctx: ApiContext = Depends(deps.get_context),
     destination: AdminSearchDestination = Query(
         AdminSearchDestination.QDRANT,
-        description="Search destination: 'qdrant' (default) or 'vespa'",
+        description="Search destination: 'qdrant' (default) or 'pgvector'",
     ),
     pubsub: PubSub = Inject(PubSub),
     dense_embedder: DenseEmbedderProtocol = Inject(DenseEmbedderProtocol),
@@ -1278,14 +1278,14 @@ async def admin_search_collection(
     This endpoint allows admins or API keys with `api_key_admin_sync` permission
     to search collections across organizations for migration and support purposes.
 
-    Supports selecting the search destination (Qdrant or Vespa) for migration testing.
+    Supports selecting the search destination (Qdrant or Pgvector) for migration testing.
 
     Args:
         readable_id: The readable ID of the collection to search
         search_request: The search request parameters
         db: Database session
         ctx: API context
-        destination: Search destination ('qdrant' or 'vespa')
+        destination: Search destination ('qdrant' or 'pgvector')
         pubsub: PubSub adapter for event streaming
         dense_embedder: Domain dense embedder for generating neural embeddings
         sparse_embedder: Domain sparse embedder for generating BM25 embeddings
@@ -1325,8 +1325,8 @@ async def admin_search_collection_as_user(
     db: AsyncSession = Depends(deps.get_db),
     ctx: ApiContext = Depends(deps.get_context),
     destination: AdminSearchDestination = Query(
-        AdminSearchDestination.VESPA,
-        description="Search destination: 'qdrant' or 'vespa' (default)",
+        AdminSearchDestination.PGVECTOR,
+        description="Search destination: 'qdrant' or 'pgvector' (default)",
     ),
     pubsub: PubSub = Inject(PubSub),
     dense_embedder: DenseEmbedderProtocol = Inject(DenseEmbedderProtocol),
@@ -1343,7 +1343,7 @@ async def admin_search_collection_as_user(
         user_principal: Username to search as
         db: Database session
         ctx: API context
-        destination: Search destination ('qdrant' or 'vespa')
+        destination: Search destination ('qdrant' or 'pgvector')
         pubsub: PubSub adapter for event streaming
         dense_embedder: Domain dense embedder for generating neural embeddings
         sparse_embedder: Domain sparse embedder for generating BM25 embeddings
@@ -1542,7 +1542,7 @@ async def admin_list_all_syncs(
     ),
     include_destination_counts: bool = Query(
         False,
-        description="Include Qdrant and Vespa document counts (slower, queries destinations)",
+        description="Include Qdrant and Pgvector document counts (slower, queries destinations)",
     ),
     include_arf_counts: bool = Query(
         False,
@@ -1568,7 +1568,7 @@ async def admin_list_all_syncs(
         - total_entity_count: Count from Postgres (EntityCount table) - always included
         - total_arf_entity_count: Count from ARF storage (None unless include_arf_counts=true)
         - total_qdrant_entity_count: Count from Qdrant (None unless include_destination_counts=true)
-        - total_vespa_entity_count: Count from Vespa (None unless include_destination_counts=true)
+        - total_pgvector_entity_count: Pgvector count (None unless include_destination_counts=true)
 
     **Performance Note**: Setting `include_destination_counts=true` or `include_arf_counts=true`
     queries external storage for each sync. Optimized with connection pooling but still slower.
@@ -1590,7 +1590,7 @@ async def admin_list_all_syncs(
         ghost_syncs_last_n: Optional filter to syncs with N consecutive failures
         tags: Optional comma-separated list of tags to filter by
         exclude_tags: Optional comma-separated list of tags to exclude
-        include_destination_counts: Whether to fetch Qdrant/Vespa counts (slower)
+        include_destination_counts: Whether to fetch Qdrant/Pgvector counts (slower)
         include_arf_counts: Whether to fetch ARF entity counts (slower)
 
     Returns:
@@ -1651,7 +1651,7 @@ async def admin_list_all_syncs(
         f"last_job={timings.get('last_job_info', 0):.1f}ms, "
         f"source_conn={timings.get('source_connections', 0):.1f}ms, "
         f"dest_qdrant={timings.get('destination_counts_qdrant', 0):.1f}ms, "
-        f"dest_vespa={timings.get('destination_counts_vespa', 0):.1f}ms, "
+        f"dest_pgvector={timings.get('destination_counts_pgvector', 0):.1f}ms, "
         f"sync_conn={timings.get('sync_connections', 0):.1f}ms, "
         f"build={timings.get('build_response', 0):.1f}ms | "
         f"Filters: sync_ids={len(parsed_sync_ids) if parsed_sync_ids else 0}, "
@@ -1902,7 +1902,7 @@ async def admin_delete_sync(
     - Cancelling active jobs
     - Cleaning up Temporal schedules
     - Removing data from Qdrant
-    - Removing data from Vespa
+    - Removing data from Pgvector
     - Removing ARF storage
     - Cascading deletes in Postgres (sync, connection, source_connection)
 

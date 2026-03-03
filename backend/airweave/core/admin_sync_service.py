@@ -262,7 +262,7 @@ class AdminSyncService:
             ghost_syncs_last_n: Filter to syncs with N consecutive failures
             tags: Filter by job tags (comma-separated)
             exclude_tags: Exclude syncs with these tags
-            include_destination_counts: Query Qdrant/Vespa (slow)
+            include_destination_counts: Query Qdrant/Pgvector (slow)
             include_arf_counts: Query ARF storage (slow)
 
         Returns:
@@ -319,7 +319,7 @@ class AdminSyncService:
 
         # Phase 2: Fetch destination counts that depend on source_conn_map
         if include_destination_counts:
-            qdrant_count_map, vespa_count_map = await asyncio.gather(
+            qdrant_count_map, pgvector_count_map = await asyncio.gather(
                 self._fetch_destination_counts(
                     syncs, source_conn_map, include_destination_counts, ctx, timings, is_qdrant=True
                 ),
@@ -334,9 +334,9 @@ class AdminSyncService:
             )
         else:
             qdrant_count_map = {s.id: None for s in syncs}
-            vespa_count_map = {s.id: None for s in syncs}
+            pgvector_count_map = {s.id: None for s in syncs}
             timings["destination_counts_qdrant"] = 0
-            timings["destination_counts_vespa"] = 0
+            timings["destination_counts_pgvector"] = 0
 
         # Build response data
         build_start = time.monotonic()
@@ -349,7 +349,7 @@ class AdminSyncService:
             entity_count_map=entity_count_map,
             arf_count_map=arf_count_map,
             qdrant_count_map=qdrant_count_map,
-            vespa_count_map=vespa_count_map,
+            pgvector_count_map=pgvector_count_map,
         )
         timings["build_response"] = (time.monotonic() - build_start) * 1000
         timings["total"] = (time.monotonic() - request_start) * 1000
@@ -540,11 +540,11 @@ class AdminSyncService:
         timings: Dict[str, float],
         is_qdrant: bool = True,
     ) -> Dict[UUID, Optional[int]]:
-        """Fetch document counts from either Qdrant or Vespa.
+        """Fetch document counts from either Qdrant or Pgvector.
 
         Optimized to reuse destination instances per collection and limit concurrency.
         """
-        timing_key = "destination_counts_qdrant" if is_qdrant else "destination_counts_vespa"
+        timing_key = "destination_counts_qdrant" if is_qdrant else "destination_counts_pgvector"
 
         if not include_counts:
             timings[timing_key] = 0
@@ -573,12 +573,12 @@ class AdminSyncService:
                         collection_id, collection_syncs, ctx
                     )
                 else:
-                    return await self._count_vespa_for_collection(
+                    return await self._count_pgvector_for_collection(
                         collection_id, collection_syncs, ctx
                     )
             except Exception as e:
                 ctx.logger.error(
-                    f"Failed to count {'Qdrant' if is_qdrant else 'Vespa'} "
+                    f"Failed to count {'Qdrant' if is_qdrant else 'Pgvector'} "
                     f"for collection {collection_id}: {e}"
                 )
                 return {sync.id: None for sync in collection_syncs}
@@ -648,15 +648,15 @@ class AdminSyncService:
             ctx.logger.error(f"Failed to create Qdrant destination: {e}")
             return {s.id: None for s in syncs}
 
-    async def _count_vespa_for_collection(
+    async def _count_pgvector_for_collection(
         self, collection_id: UUID, syncs: List[Sync], ctx: ApiContext
     ) -> Dict[UUID, Optional[int]]:
-        """Count Vespa documents for all syncs in a collection (reuse client)."""
-        from airweave.platform.destinations.vespa import VespaDestination
+        """Count Pgvector documents for all syncs in a collection (reuse client)."""
+        from airweave.platform.destinations.pgvector import PgvectorDestination
 
         try:
             # Create destination once for the collection
-            vespa = await VespaDestination.create(
+            pgvector = await PgvectorDestination.create(
                 collection_id=collection_id,
                 organization_id=syncs[0].organization_id,
                 logger=ctx.logger,
@@ -668,30 +668,26 @@ class AdminSyncService:
             async def count_sync(sync: Sync) -> Tuple[UUID, Optional[int]]:
                 async with semaphore:
                     try:
-                        # Query all Vespa schemas (base, file, code_file, email, web)
-                        schemas = (
-                            "base_entity, file_entity, code_file_entity, email_entity, web_entity"
+                        table_name = pgvector._sanitize_table_name(str(collection_id))
+                        sql = (
+                            f"SELECT COUNT(*) FROM {table_name} "
+                            f"WHERE sync_id = $1 AND collection_id = $2"
                         )
-                        yql = (
-                            f"select * from sources {schemas} "
-                            f"where airweave_system_metadata_sync_id contains '{sync.id}' "
-                            f"and airweave_system_metadata_collection_id contains '{collection_id}' "
-                            f"limit 0"
+                        row = await pgvector._pool.fetchrow(
+                            sql, str(sync.id), str(collection_id)
                         )
-
-                        query_params = {"yql": yql}
-                        # Use the refactored VespaClient for queries
-                        response = await vespa._client.execute_query(query_params)
-                        return sync.id, response.total_count
+                        return sync.id, row["count"] if row else 0
                     except Exception as e:
-                        ctx.logger.warning(f"Failed to count Vespa for sync {sync.id}: {e}")
+                        ctx.logger.warning(
+                            f"Failed to count Pgvector for sync {sync.id}: {e}"
+                        )
                         return sync.id, None
 
             results = await asyncio.gather(*[count_sync(s) for s in syncs])
             return dict(results)
 
         except Exception as e:
-            ctx.logger.error(f"Failed to create Vespa destination: {e}")
+            ctx.logger.error(f"Failed to create Pgvector destination: {e}")
             return {s.id: None for s in syncs}
 
     def _build_sync_data_list(
@@ -704,7 +700,7 @@ class AdminSyncService:
         entity_count_map: Dict[UUID, int],
         arf_count_map: Dict[UUID, Optional[int]],
         qdrant_count_map: Dict[UUID, Optional[int]],
-        vespa_count_map: Dict[UUID, Optional[int]],
+        pgvector_count_map: Dict[UUID, Optional[int]],
     ) -> List[Dict[str, Any]]:
         """Build response data list from fetched information."""
         sync_data_list = []
@@ -724,7 +720,7 @@ class AdminSyncService:
             sync_dict["total_entity_count"] = entity_count_map.get(sync.id, 0)
             sync_dict["total_arf_entity_count"] = arf_count_map.get(sync.id)
             sync_dict["total_qdrant_entity_count"] = qdrant_count_map.get(sync.id)
-            sync_dict["total_vespa_entity_count"] = vespa_count_map.get(sync.id)
+            sync_dict["total_pgvector_entity_count"] = pgvector_count_map.get(sync.id)
 
             # Handle status enum
             last_status = last_job.get("status")

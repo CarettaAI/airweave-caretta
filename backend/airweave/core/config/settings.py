@@ -44,7 +44,7 @@ class Settings(BaseSettings):
         TEXT2VEC_INFERENCE_URL (str): The URL for text2vec-transformers inference service.
         OPENAI_API_KEY (Optional[str]): The OpenAI API key.
         MISTRAL_API_KEY (Optional[str]): The Mistral AI API key.
-        EMBEDDING_DIMENSIONS (int): Embedding dimensions for the stack (provider, Vespa).
+        EMBEDDING_DIMENSIONS (int): Embedding dimensions for the stack (provider, Pgvector).
         FIRECRAWL_API_KEY (Optional[str]): The FireCrawl API key.
         TEMPORAL_HOST (str): The host of the Temporal server.
         TEMPORAL_PORT (int): The Temporal server port.
@@ -126,11 +126,9 @@ class Settings(BaseSettings):
     EMBEDDING_DIMENSIONS: int | None = None
     SPARSE_EMBEDDER: str | None = None
 
-    # Vespa configuration
+    # Vespa configuration (kept for agentic search fallback)
     VESPA_URL: str = "http://localhost"
     VESPA_PORT: int = 8081
-    VESPA_TIMEOUT: float = 60.0
-    VESPA_CLUSTER: str = "airweave"  # Vespa content cluster name for bulk operations
 
     # Pgvector configuration
     PGVECTOR_CONNECTION_STRING: Optional[str] = None
@@ -429,15 +427,6 @@ class Settings(BaseSettings):
             port=port,
             path=f"{info.data.get('POSTGRES_DB') or ''}",
         )
-
-    @property
-    def vespa_url(self) -> str:
-        """The Vespa URL.
-
-        Returns:
-            str: The Vespa URL in http://host:port format.
-        """
-        return f"{self.VESPA_URL}:{self.VESPA_PORT}"
 
     @property
     def api_url(self) -> str:

@@ -1,9 +1,9 @@
 """Unified chunk and embed processor for vector databases.
 
-Used by: Qdrant, Vespa, Pinecone, and similar vector DBs.
+Used by: Qdrant, Pgvector, Pinecone, and similar vector DBs.
 
 Both destinations use chunk-as-document model where each chunk becomes
-a separate document with its own embedding. Both Qdrant and Vespa use:
+a separate document with its own embedding. Both Qdrant and Pgvector use:
 - Dense embeddings (3072-dim) for neural/semantic search
 - Sparse embeddings (FastEmbed Qdrant/bm25) for keyword search scoring
 
@@ -221,7 +221,7 @@ class ChunkEmbedProcessor(ContentProcessor):
     ) -> None:
         """Compute dense and sparse embeddings for all destinations.
 
-        Both Qdrant and Vespa use:
+        Both Qdrant and Pgvector use:
         - Dense embeddings (provider-specific dim) for neural/semantic search
         - Sparse embeddings (FastEmbed Qdrant/bm25) for keyword search scoring
 

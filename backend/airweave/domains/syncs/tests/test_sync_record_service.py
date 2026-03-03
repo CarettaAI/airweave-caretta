@@ -11,7 +11,7 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi import HTTPException
 
-from airweave.core.constants.reserved_ids import NATIVE_VESPA_UUID
+from airweave.core.constants.reserved_ids import NATIVE_PGVECTOR_UUID
 from airweave.core.shared_models import FeatureFlag
 from airweave.core.shared_models import SyncJobStatus
 from airweave.domains.syncs.sync_record_service import SyncRecordService
@@ -159,7 +159,7 @@ RESOLVE_DEST_CASES = [
         name="feature_off_returns_native_only",
         has_s3_feature=False,
         s3_connection_id=None,
-        expected_dest_ids=[NATIVE_VESPA_UUID],
+        expected_dest_ids=[NATIVE_PGVECTOR_UUID],
         expect_db_execute=False,
         expect_info_log=False,
         expect_warning_log=False,
@@ -168,7 +168,7 @@ RESOLVE_DEST_CASES = [
         name="feature_on_with_s3_connection",
         has_s3_feature=True,
         s3_connection_id=S3_CONNECTION_ID,
-        expected_dest_ids=[NATIVE_VESPA_UUID, S3_CONNECTION_ID],
+        expected_dest_ids=[NATIVE_PGVECTOR_UUID, S3_CONNECTION_ID],
         expect_db_execute=True,
         expect_info_log=True,
         expect_warning_log=False,
@@ -177,7 +177,7 @@ RESOLVE_DEST_CASES = [
         name="feature_on_without_s3_connection",
         has_s3_feature=True,
         s3_connection_id=None,
-        expected_dest_ids=[NATIVE_VESPA_UUID],
+        expected_dest_ids=[NATIVE_PGVECTOR_UUID],
         expect_db_execute=True,
         expect_info_log=False,
         expect_warning_log=True,
@@ -216,7 +216,7 @@ async def test_create_sync_flushes_sync_and_sync_job_and_refreshes_sync_job_befo
             AsyncMock(),
             name="Test Sync",
             source_connection_id=uuid4(),
-            destination_connection_ids=[NATIVE_VESPA_UUID],
+            destination_connection_ids=[NATIVE_PGVECTOR_UUID],
             cron_schedule=None,
             run_immediately=True,
             ctx=ctx,
@@ -253,7 +253,7 @@ async def test_create_sync_flushes_sync_even_without_immediate_job():
         AsyncMock(),
         name="Test Sync",
         source_connection_id=uuid4(),
-        destination_connection_ids=[NATIVE_VESPA_UUID],
+        destination_connection_ids=[NATIVE_PGVECTOR_UUID],
         cron_schedule="0 * * * *",
         run_immediately=False,
         ctx=ctx,

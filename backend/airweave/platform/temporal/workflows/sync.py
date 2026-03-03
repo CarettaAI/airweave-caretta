@@ -233,10 +233,10 @@ class CleanupStuckSyncJobsWorkflow:
 
 @workflow.defn
 class CleanupSyncDataWorkflow:
-    """Workflow for cleaning up external data (Vespa, ARF) after sync deletion.
+    """Workflow for cleaning up external data (Pgvector, ARF) after sync deletion.
 
     This runs asynchronously after the DB records have been cascade-deleted,
-    handling the potentially slow cleanup of destination data. Vespa deletions
+    handling the potentially slow cleanup of destination data. Pgvector deletions
     can take minutes, so this must not run in the API request cycle.
 
     Only accepts primitive IDs to keep the Temporal payload small.

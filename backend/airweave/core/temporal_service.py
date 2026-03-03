@@ -119,7 +119,7 @@ class TemporalService:
         """Start an async workflow to clean up external data for deleted syncs.
 
         This is fire-and-forget: the DELETE endpoint returns immediately,
-        and Temporal handles the potentially slow Vespa/ARF cleanup in the
+        and Temporal handles the potentially slow Pgvector/ARF cleanup in the
         background with retries.
 
         Args:

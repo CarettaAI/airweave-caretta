@@ -1,6 +1,6 @@
 """Text-only processor for destinations that embed internally.
 
-Used by: Vespa (and future destinations with server-side embedding)
+Used by: Pgvector (and future destinations with server-side embedding)
 """
 
 from typing import TYPE_CHECKING, List
