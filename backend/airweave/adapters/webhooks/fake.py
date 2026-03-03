@@ -1,6 +1,6 @@
-"""Fake webhook adapters for testing.
+"""Fake webhook adapters (no-op implementations).
 
-Records operations for assertions without touching Svix.
+Records operations for assertions in tests; used as production no-ops.
 """
 
 from datetime import datetime, timezone
@@ -26,8 +26,7 @@ class FakeWebhookPublisher:
 
     Usage:
         fake = FakeWebhookPublisher()
-        subscriber = WebhookEventSubscriber(publisher=fake)
-        await subscriber.handle(some_event)
+        await fake.publish_event(some_event)
 
         assert fake.has_event("sync.completed")
         event = fake.get_events("sync.completed")[0]
@@ -60,7 +59,7 @@ class FakeWebhookPublisher:
 class FakeWebhookAdmin:
     """Test implementation of WebhookAdmin.
 
-    Records all operations for assertions without touching Svix.
+    Records all operations for assertions.
 
     Usage:
         fake = FakeWebhookAdmin()

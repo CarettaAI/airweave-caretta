@@ -239,10 +239,6 @@ class Settings(BaseSettings):
     APP_FULL_URL: Optional[str] = None
     ADDITIONAL_CORS_ORIGINS: Optional[str] = None  # Separated by commas or semicolons
 
-    # Svix (webhooks) configuration
-    SVIX_URL: str = "http://localhost:8071"
-    SVIX_JWT_SECRET: str = "default_signing_secret_change_me!"
-    WEBHOOK_VERIFY_ENDPOINTS: bool = True
 
     @field_validator("HEALTH_CHECK_TIMEOUT", mode="before")
     def validate_health_check_timeout(cls, v: float) -> float:

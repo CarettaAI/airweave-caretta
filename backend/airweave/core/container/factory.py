@@ -30,8 +30,12 @@ from airweave.adapters.ocr.docling import DoclingOcrAdapter
 from airweave.adapters.ocr.fallback import FallbackOcrProvider
 from airweave.adapters.ocr.mistral import MistralOcrAdapter
 from airweave.adapters.pubsub.redis import RedisPubSub
-from airweave.adapters.webhooks.endpoint_verifier import HttpEndpointVerifier
-from airweave.adapters.webhooks.svix import SvixAdapter
+from airweave.adapters.webhooks.fake import (
+    FakeEndpointVerifier,
+    FakeWebhookAdmin,
+    FakeWebhookPublisher,
+    FakeWebhookService,
+)
 from airweave.core.config import Settings
 from airweave.core.container.container import Container
 from airweave.core.health.service import HealthService
@@ -40,7 +44,6 @@ from airweave.core.metrics_service import PrometheusMetricsService
 from airweave.core.protocols import CircuitBreaker, OcrProvider, PubSub
 from airweave.core.protocols.event_bus import EventBus
 from airweave.core.protocols.payment import PaymentGatewayProtocol
-from airweave.core.protocols.webhooks import WebhookPublisher
 from airweave.core.redis_client import redis_client
 from airweave.db.session import health_check_engine
 from airweave.domains.auth_provider.registry import AuthProviderRegistry
@@ -101,8 +104,6 @@ from airweave.domains.usage.limit_checker import UsageLimitChecker, UsageLimitCh
 from airweave.domains.usage.protocols import UsageLedgerProtocol
 from airweave.domains.usage.repository import UsageRepository
 from airweave.domains.usage.subscribers.billing_listener import UsageBillingListener
-from airweave.domains.webhooks.service import WebhookServiceImpl
-from airweave.domains.webhooks.subscribers import WebhookEventSubscriber
 from airweave.platform.auth.settings import integration_settings
 from airweave.platform.sync.subscribers.progress_relay import SyncProgressRelay
 from airweave.platform.temporal.client import TemporalClient
@@ -129,15 +130,12 @@ def create_container(settings: Settings) -> Container:
         container = create_container(settings)
     """
     # -----------------------------------------------------------------
-    # Webhooks (Svix adapter)
-    # SvixAdapter implements both WebhookPublisher and WebhookAdmin
+    # Webhooks (no-op fakes)
     # -----------------------------------------------------------------
-    svix_adapter = SvixAdapter()
-
-    # -----------------------------------------------------------------
-    # Endpoint verification (plain HTTP, not Svix)
-    # -----------------------------------------------------------------
-    endpoint_verifier = HttpEndpointVerifier()
+    fake_webhook_publisher = FakeWebhookPublisher()
+    fake_webhook_admin = FakeWebhookAdmin()
+    fake_endpoint_verifier = FakeEndpointVerifier()
+    fake_webhook_service = FakeWebhookService()
 
     # -----------------------------------------------------------------
     # Billing services
@@ -161,15 +159,6 @@ def create_container(settings: Settings) -> Container:
     # -----------------------------------------------------------------
     usage_checker = _create_usage_checker(settings, billing_services, source_deps, user_org_repo)
     usage_ledger = _create_usage_ledger(settings, billing_services)
-    # -----------------------------------------------------------------
-    # Webhook service (composes admin + verifier for API layer)
-    # -----------------------------------------------------------------
-    webhook_service = WebhookServiceImpl(
-        webhook_admin=svix_adapter,
-        endpoint_verifier=endpoint_verifier,
-        verify_endpoints=settings.WEBHOOK_VERIFY_ENDPOINTS,
-    )
-
     # -----------------------------------------------------------------
     # PubSub (realtime message transport — Redis adapter)
     # -----------------------------------------------------------------
@@ -196,7 +185,6 @@ def create_container(settings: Settings) -> Container:
     metrics = _create_metrics_service(settings)
 
     event_bus = _create_event_bus(
-        webhook_publisher=svix_adapter,
         settings=settings,
         pubsub=pubsub,
         usage_ledger=usage_ledger,
@@ -355,8 +343,8 @@ def create_container(settings: Settings) -> Container:
         health=health,
         event_bus=event_bus,
         pubsub=pubsub,
-        webhook_publisher=svix_adapter,
-        webhook_admin=svix_adapter,
+        webhook_publisher=fake_webhook_publisher,
+        webhook_admin=fake_webhook_admin,
         circuit_breaker=circuit_breaker,
         dense_embedder_registry=dense_embedder_registry,
         sparse_embedder_registry=sparse_embedder_registry,
@@ -380,8 +368,8 @@ def create_container(settings: Settings) -> Container:
         oauth_callback_service=oauth_callback_svc,
         init_session_repo=init_session_repo,
         source_lifecycle_service=source_deps["source_lifecycle_service"],
-        endpoint_verifier=endpoint_verifier,
-        webhook_service=webhook_service,
+        endpoint_verifier=fake_endpoint_verifier,
+        webhook_service=fake_webhook_service,
         response_builder=sync_deps["response_builder"],
         sync_repo=source_deps["sync_repo"],
         sync_cursor_repo=source_deps["sync_cursor_repo"],
@@ -451,7 +439,6 @@ def _create_metrics_service(settings: Settings) -> PrometheusMetricsService:
 
 
 def _create_event_bus(
-    webhook_publisher: WebhookPublisher,
     settings: Settings,
     pubsub: PubSub,
     usage_ledger: UsageLedgerProtocol,
@@ -459,7 +446,6 @@ def _create_event_bus(
     """Create event bus with subscribers wired up.
 
     The event bus fans out domain events to:
-    - WebhookEventSubscriber: External webhooks via Svix (all events)
     - AnalyticsEventSubscriber: PostHog analytics tracking
     - SyncProgressRelay: Relays entity batch events to Redis PubSub (entity.*)
     - UsageBillingListener: Accumulates usage from entity/query/sync/
@@ -469,12 +455,6 @@ def _create_event_bus(
         EventBus
     """
     bus = InMemoryEventBus()
-
-    # WebhookEventSubscriber subscribes to * — all domain events
-    # Svix channel filtering handles per-endpoint event type matching
-    webhook_subscriber = WebhookEventSubscriber(webhook_publisher)
-    for pattern in webhook_subscriber.EVENT_PATTERNS:
-        bus.subscribe(pattern, webhook_subscriber.handle)
 
     # AnalyticsEventSubscriber — forwards domain events to PostHog
     tracker = PostHogTracker(settings)

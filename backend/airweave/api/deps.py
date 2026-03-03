@@ -607,13 +607,12 @@ def Inject(protocol_type: type):  # noqa: N802 — uppercase to match FastAPI co
     Usage in FastAPI endpoints::
 
         from airweave.api.deps import Inject
-        from airweave.core.protocols import EventBus, WebhookAdmin
+        from airweave.core.protocols.event_bus import EventBus
 
 
         @router.post("/")
         async def create(
             event_bus: EventBus = Inject(EventBus),
-            webhook_admin: WebhookAdmin = Inject(WebhookAdmin),
         ):
             await event_bus.publish(...)
     """

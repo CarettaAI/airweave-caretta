@@ -240,9 +240,6 @@ class OrganizationService:
                 await context_cache.invalidate_user(owner_user.email)
                 logger.debug(f"Invalidated user cache for {owner_user.email}")
 
-                # Svix organization is created lazily on first webhook use
-                # (via _auto_create_org in SvixAdapter), no explicit call needed.
-
                 return organization
 
         except Exception as e:
@@ -671,13 +668,6 @@ class OrganizationService:
                 await context_cache.invalidate_user(email)
             if affected_user_emails:
                 logger.debug(f"Invalidated user cache for {len(affected_user_emails)} users")
-
-            # Delete organization from webhooks (Svix application cleanup)
-            # TODO: delete this after DI is implemented for OrganizationService
-            from airweave.core.container import container
-
-            if container is not None:
-                await container.webhook_admin.delete_organization(org.id)
 
             logger.info(f"Successfully deleted organization: {org.name}")
             return True

@@ -2,7 +2,7 @@
 
 Four protocols based on consumer needs:
 - WebhookPublisher: Internal use (event bus subscriber publishes events)
-- WebhookAdmin: Infrastructure adapter (Svix CRUD for subscriptions + messages)
+- WebhookAdmin: Infrastructure adapter (CRUD for subscriptions + messages)
 - EndpointVerifier: Verify webhook endpoint reachability before subscription
 - WebhookService: High-level service the API layer injects (composes the above)
 
@@ -50,8 +50,6 @@ class WebhookAdmin(Protocol):
     # -------------------------------------------------------------------------
     # Organization lifecycle
     # -------------------------------------------------------------------------
-
-    # TODO: Implement create organization -> now implemented implicitly by SvixAdapter (decorator)
 
     async def delete_organization(self, org_id: UUID) -> None:
         """Delete an organization and all its webhook data.

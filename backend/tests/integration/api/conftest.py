@@ -2,7 +2,7 @@
 
 Provides an async HTTP client wired to the FastAPI app with the DI container
 overridden to use fakes. This lets us test endpoints end-to-end (HTTP in,
-HTTP out) without touching real infrastructure (Svix, Stripe, Temporal, etc).
+HTTP out) without touching real infrastructure (Stripe, Temporal, etc).
 
 Pattern:
     1. Override get_container -> returns test_container (all fakes)

@@ -76,8 +76,6 @@ pillow = "^11.0.0"
 chonkie = {extras = ["code", "semantic"], version = "^1.4.0"}
 prometheus-client = "^0.21.0"
 psutil = "^5.9.0"
-svix = "^1.84.1"
-pyjwt = "^2.10.1"
 mistral_common = {version = "1.8.8", extras = ["sentencepiece"]}
 google-cloud-storage = "^3.8.0"
 

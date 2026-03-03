@@ -1,15 +1,4 @@
-"""Smoke-test fixtures.
-
-Provides a publicly reachable webhook endpoint (via postb.in) so that:
-
-1. The Airweave backend can verify the URL on subscription creation.
-2. The Svix container can actually deliver webhooks to it.
-
-postb.in is a free HTTP request bin that accepts any POST and returns
-200.  It is reachable from both the test host *and* from inside Docker
-containers, which sidesteps all the host.docker.internal / ngrok /
-firewall headaches.
-"""
+"""Smoke-test fixtures."""
 
 import httpx
 import pytest

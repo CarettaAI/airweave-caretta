@@ -107,7 +107,6 @@ class SyncLifecycleEvent(DomainEvent):
     - CANCELLED (user cancelled)
 
     Subscribers:
-    - WebhookSubscriber: Sends to external webhook endpoints (Svix)
     - AnalyticsSubscriber: Tracks in PostHog
     - RealtimeSubscriber: Pushes to Redis PubSub for UI updates
     """
